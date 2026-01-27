@@ -1,0 +1,20 @@
+[project]
+name = "py-openrpc-generator"
+version = "0.1.0"
+description = "Python OpenRPC code generator"
+readme = "README.md"
+license = { text = "BSD-2-Clause" }
+authors = [
+    { name = "Dušan Simić", email = "dusan.simic1810@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "jinja2>=3.1.6",
+]
+
+[project.scripts]
+py-openrpc-generator = "py_openrpc_generator.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.9.21,<0.10.0"]
+build-backend = "uv_build"

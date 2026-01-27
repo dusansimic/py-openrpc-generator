@@ -1,0 +1,169 @@
+{
+  "openrpc": "1.3.0",
+  "info": {
+    "title": "Example API",
+    "description": "A sample API for testing the generator",
+    "version": "1.0.0"
+  },
+  "methods": [
+    {
+      "name": "user.getById",
+      "summary": "Get user by ID",
+      "description": "Retrieves a user object by their unique identifier",
+      "params": [
+        {
+          "name": "userId",
+          "description": "The unique identifier of the user",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "result": {
+        "name": "user",
+        "description": "The user object",
+        "schema": {
+          "$ref": "#/components/schemas/User"
+        }
+      }
+    },
+    {
+      "name": "user.create",
+      "summary": "Create a new user",
+      "description": "Creates a new user with the provided information",
+      "params": [
+        {
+          "name": "name",
+          "description": "User's full name",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "email",
+          "description": "User's email address",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        {
+          "name": "age",
+          "description": "User's age",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      ],
+      "result": {
+        "name": "user",
+        "description": "The created user object",
+        "schema": {
+          "$ref": "#/components/schemas/User"
+        }
+      }
+    },
+    {
+      "name": "user.list",
+      "summary": "List all users",
+      "description": "Retrieves a paginated list of users",
+      "params": [
+        {
+          "name": "page",
+          "description": "Page number",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "limit",
+          "description": "Number of items per page",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 10
+          }
+        }
+      ],
+      "result": {
+        "name": "users",
+        "description": "List of users",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/User"
+              }
+            },
+            "total": {
+              "type": "integer"
+            },
+            "page": {
+              "type": "integer"
+            }
+          },
+          "required": ["items", "total", "page"]
+        }
+      }
+    },
+    {
+      "name": "ping",
+      "summary": "Ping the server",
+      "description": "Simple health check endpoint",
+      "params": [],
+      "result": {
+        "name": "pong",
+        "description": "Pong response",
+        "schema": {
+          "type": "string",
+          "enum": ["pong"]
+        }
+      }
+    }
+  ],
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "User's full name"
+          },
+          "email": {
+            "type": "string",
+            "description": "User's email address"
+          },
+          "age": {
+            "type": "integer",
+            "description": "User's age"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "suspended"],
+            "description": "User's account status"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Account creation timestamp"
+          }
+        },
+        "required": ["id", "name", "email", "status", "createdAt"]
+      }
+    }
+  }
+}

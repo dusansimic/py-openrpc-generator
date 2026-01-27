@@ -1,0 +1,329 @@
+{
+  "openrpc": "1.3.0",
+  "info": {
+    "title": "Advanced Example API",
+    "description": "A comprehensive API spec demonstrating all OpenRPC features",
+    "version": "2.0.0",
+    "contact": {
+      "name": "API Support",
+      "email": "support@example.com"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "name": "production",
+      "url": "https://{environment}.example.com/api/v{version}",
+      "description": "Production server with variables",
+      "variables": {
+        "environment": {
+          "default": "api",
+          "enum": ["api", "staging"],
+          "description": "Server environment"
+        },
+        "version": {
+          "default": "2",
+          "description": "API version"
+        }
+      }
+    }
+  ],
+  "methods": [
+    {
+      "name": "user.getById",
+      "summary": "Get user by ID",
+      "description": "Retrieves a user object by their unique identifier",
+      "tags": ["Users"],
+      "params": [
+        {
+          "$ref": "#/components/contentDescriptors/UserId"
+        }
+      ],
+      "result": {
+        "name": "user",
+        "description": "The user object",
+        "schema": {
+          "$ref": "#/components/schemas/User"
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/UserNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidUserId"
+        }
+      ]
+    },
+    {
+      "name": "user.create",
+      "summary": "Create a new user",
+      "description": "Creates a new user with the provided information",
+      "tags": ["Users"],
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "name",
+          "description": "User's full name",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        {
+          "name": "email",
+          "description": "User's email address",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        {
+          "name": "age",
+          "description": "User's age",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 150
+          }
+        }
+      ],
+      "result": {
+        "name": "user",
+        "description": "The created user object",
+        "schema": {
+          "$ref": "#/components/schemas/User"
+        }
+      },
+      "errors": [
+        {
+          "code": 1002,
+          "message": "Email already exists"
+        },
+        {
+          "code": 1003,
+          "message": "Invalid email format"
+        }
+      ]
+    },
+    {
+      "name": "user.update",
+      "summary": "Update user (DEPRECATED)",
+      "description": "Updates an existing user. Use user.patch instead.",
+      "deprecated": true,
+      "tags": ["Users"],
+      "params": [
+        {
+          "$ref": "#/components/contentDescriptors/UserId"
+        },
+        {
+          "name": "data",
+          "description": "User data to update",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "result": {
+        "name": "user",
+        "schema": {
+          "$ref": "#/components/schemas/User"
+        }
+      }
+    },
+    {
+      "name": "math.add",
+      "summary": "Add two numbers",
+      "description": "Returns the sum of two numbers using positional parameters",
+      "tags": ["Math"],
+      "paramStructure": "by-position",
+      "params": [
+        {
+          "name": "a",
+          "description": "First number",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "b",
+          "description": "Second number",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "result": {
+        "name": "sum",
+        "description": "The sum of a and b",
+        "schema": {
+          "type": "number"
+        }
+      }
+    },
+    {
+      "name": "notifications.subscribe",
+      "summary": "Subscribe to notifications",
+      "description": "Subscribe to real-time notifications (notification method, no response expected)",
+      "tags": ["Notifications"],
+      "params": [
+        {
+          "name": "channel",
+          "description": "Notification channel",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": ["users", "orders", "system"]
+          }
+        }
+      ]
+    },
+    {
+      "name": "search.query",
+      "summary": "Search across entities",
+      "description": "Performs a full-text search across multiple entity types",
+      "tags": ["Search"],
+      "params": [
+        {
+          "name": "query",
+          "description": "Search query string",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        {
+          "name": "filters",
+          "description": "Search filters",
+          "required": false,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": ["user", "order", "product"]
+              },
+              "dateFrom": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "dateTo": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ],
+      "result": {
+        "name": "results",
+        "description": "Search results",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "score": {
+                    "type": "number"
+                  }
+                },
+                "required": ["id", "type", "title", "score"]
+              }
+            },
+            "total": {
+              "type": "integer"
+            }
+          },
+          "required": ["items", "total"]
+        }
+      }
+    }
+  ],
+  "components": {
+    "contentDescriptors": {
+      "UserId": {
+        "name": "userId",
+        "description": "The unique identifier of the user",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{24}$"
+        }
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "User's full name"
+          },
+          "email": {
+            "type": "string",
+            "description": "User's email address"
+          },
+          "age": {
+            "type": "integer",
+            "description": "User's age"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "suspended"],
+            "description": "User's account status"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Account creation timestamp"
+          }
+        },
+        "required": ["id", "name", "email", "status", "createdAt"]
+      }
+    },
+    "errors": {
+      "UserNotFound": {
+        "code": 1001,
+        "message": "User not found"
+      },
+      "InvalidUserId": {
+        "code": 1004,
+        "message": "Invalid user ID format"
+      }
+    }
+  }
+}
