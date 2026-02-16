@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from .generators.base import OpenRPCSpec
 from .generators.typescript import TypeScriptGenerator
+from .generators.golang import GolangGenerator
 
 
 def main():
@@ -23,7 +24,7 @@ def main():
     # Generate command
     generate_parser = subparsers.add_parser(
         "generate",
-        help="Generate client code from OpenRPC specification",
+        help="Generate code from OpenRPC specification",
     )
 
     generate_parser.add_argument(
@@ -36,15 +37,18 @@ def main():
         "-o",
         "--output",
         type=str,
-        default="./client.ts",
-        help="Output file path (default: ./client.ts)",
+        default=None,
+        help=(
+            "Output file path. "
+            "Defaults to ./client.ts for typescript, ./server.go for go-gorilla."
+        ),
     )
 
     generate_parser.add_argument(
         "-l",
         "--language",
         type=str,
-        choices=["typescript"],
+        choices=["typescript", "go-gorilla"],
         default="typescript",
         help="Target language (default: typescript)",
     )
@@ -54,7 +58,15 @@ def main():
         "--class-name",
         type=str,
         default="RPCClient",
-        help="Generated client class name (default: RPCClient)",
+        help="[TypeScript only] Generated client class name (default: RPCClient)",
+    )
+
+    generate_parser.add_argument(
+        "-p",
+        "--package-name",
+        type=str,
+        default="main",
+        help="[Go only] Go package name for the generated file (default: main)",
     )
 
     args = parser.parse_args()
@@ -65,15 +77,26 @@ def main():
 
     if args.command == "generate":
         try:
+            # Resolve default output path per language
+            output_path = args.output
+            if output_path is None:
+                if args.language == "go-gorilla":
+                    output_path = "./server.go"
+                else:
+                    output_path = "./client.ts"
+
             # Load OpenRPC spec
             spec = OpenRPCSpec.from_file(args.spec)
 
-            # Generate client based on language
+            # Generate based on language
             if args.language == "typescript":
                 generator = TypeScriptGenerator()
-                generator.generate(spec, args.output, args.class_name)
+                generator.generate(spec, output_path, args.class_name)
+            elif args.language == "go-gorilla":
+                generator = GolangGenerator()
+                generator.generate(spec, output_path, args.package_name)
 
-            print(f"✓ Successfully generated {args.language} client")
+            print(f"Successfully generated {args.language} output: {output_path}")
             return 0
 
         except FileNotFoundError as e:
