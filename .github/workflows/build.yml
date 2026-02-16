@@ -1,0 +1,54 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            pretty-name: Linux
+            artifact-name: py-openrpc-generator-linux
+            executable-path: dist/py-openrpc-generator
+          - os: windows-latest
+            pretty-name: Windows
+            artifact-name: py-openrpc-generator-windows
+            executable-path: dist/py-openrpc-generator.exe
+
+    name: Build for ${{ matrix.pretty-name }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Install PyInstaller
+        run: uv pip install pyinstaller
+
+      - name: Build binary
+        run: uv run pyinstaller py-openrpc-generator.spec
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: ${{ matrix.executable-path }}
+          retention-days: 30
