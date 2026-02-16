@@ -13,20 +13,28 @@ This allows adding new language targets without modifying the core OpenRPC parsi
 
 ## Component Overview
 
-```
-OpenRPC JSON File
-      ↓
-base.py — OpenRPCSpec
-      ↓
-  ┌───┴────────────────────────────────────┐
-  ↓                                        ↓
-typescript.py                         golang.py
-  ↓                                        ↓
-typescript_converter.py          golang_converter.py
-  ↓                                        ↓
-typescript-client.ts.jinja2   golang-gorilla-server.go.jinja2
-  ↓                                        ↓
-client.ts                            server.go
+```mermaid
+flowchart TD
+    A[OpenRPC JSON File]
+    B["base.py — OpenRPCSpec"]
+    C["typescript.py\nTypeScriptGenerator"]
+    D["golang.py\nGolangGenerator"]
+    E["typescript_converter.py\nTypeScriptConverter"]
+    F["golang_converter.py\nGolangConverter"]
+    G["typescript-client.ts.jinja2"]
+    H["golang-gorilla-server.go.jinja2"]
+    I["client.ts"]
+    J["server.go"]
+
+    A --> B
+    B --> C
+    B --> D
+    C --> E
+    D --> F
+    E --> G
+    F --> H
+    G --> I
+    H --> J
 ```
 
 ---
@@ -193,41 +201,48 @@ Generates a single Go file:
 
 ## Data Flow — Full Picture
 
-```
-OpenRPC JSON File
-      │
-      ▼
-OpenRPCSpec.from_file()          ← validates openrpc/info/methods fields
-      │
-      ▼
-OpenRPCSpec.get_method_list()    ← resolves $refs, returns structured dicts
-      │
-      ├─────────────────────────────────────────────────────┐
-      │  TypeScript path                                     │  Go path
-      ▼                                                      ▼
-TypeScriptGenerator.generate()                   GolangGenerator.generate()
-      │                                                      │
-      ├── TypeScriptConverter                    ├── GolangConverter
-      │   └── convert_schema()                  │   ├── convert_schema()
-      │       └── generate interfaces           │   ├── _field_go_type()
-      │                                         │   └── _build_struct_fields()
-      ├── _process_methods()                    │
-      │   └── type names per method             ├── _process_methods()
-      │                                         │   ├── service/namespace grouping
-      ├── _process_errors()                     │   └── reply type strategy
-      │                                         │
-      ├── _get_default_server_url()             ├── _process_services()
-      │                                         ├── _process_errors()
-      └── _organize_methods_by_tag()            └── _get_default_port()
-                    │                                        │
-                    ▼                                        ▼
-          Template Context dict                   Template Context dict
-                    │                                        │
-                    ▼                                        ▼
-      typescript-client.ts.jinja2        golang-gorilla-server.go.jinja2
-                    │                                        │
-                    ▼                                        ▼
-               client.ts                               server.go
+```mermaid
+flowchart TD
+    INPUT[OpenRPC JSON File]
+    PARSE["OpenRPCSpec.from_file()\nvalidates openrpc / info / methods"]
+    METHODS["OpenRPCSpec.get_method_list()\nresolves $refs → structured dicts"]
+
+    INPUT --> PARSE --> METHODS
+
+    METHODS --> TS_GEN
+    METHODS --> GO_GEN
+
+    subgraph TS_PATH [TypeScript Path]
+        TS_GEN["TypeScriptGenerator.generate()"]
+        TS_CONV["TypeScriptConverter\nconvert_schema() — generate interfaces"]
+        TS_PM["_process_methods()\ntype names per method"]
+        TS_PE["_process_errors()"]
+        TS_URL["_get_default_server_url()"]
+        TS_TAG["_organize_methods_by_tag()"]
+        TS_CTX[Template Context]
+        TS_TPL["typescript-client.ts.jinja2"]
+        TS_OUT[client.ts]
+
+        TS_GEN --> TS_CONV & TS_PM & TS_PE & TS_URL & TS_TAG
+        TS_CONV & TS_PM & TS_PE & TS_URL & TS_TAG --> TS_CTX
+        TS_CTX --> TS_TPL --> TS_OUT
+    end
+
+    subgraph GO_PATH [Go Path]
+        GO_GEN["GolangGenerator.generate()"]
+        GO_CONV["GolangConverter\nconvert_schema() · _field_go_type()\n_build_struct_fields()"]
+        GO_PM["_process_methods()\nnamespace grouping · reply type strategy"]
+        GO_PS["_process_services()"]
+        GO_PE["_process_errors()"]
+        GO_PORT["_get_default_port()"]
+        GO_CTX[Template Context]
+        GO_TPL["golang-gorilla-server.go.jinja2"]
+        GO_OUT[server.go]
+
+        GO_GEN --> GO_CONV & GO_PM & GO_PS & GO_PE & GO_PORT
+        GO_CONV & GO_PM & GO_PS & GO_PE & GO_PORT --> GO_CTX
+        GO_CTX --> GO_TPL --> GO_OUT
+    end
 ```
 
 ---
