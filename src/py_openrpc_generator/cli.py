@@ -1,9 +1,9 @@
 import argparse
 import sys
 from pathlib import Path
-from .generators.base import OpenRPCSpec
-from .generators.typescript import TypeScriptGenerator
-from .generators.golang import GolangGenerator
+from py_openrpc_generator.generators.base import OpenRPCSpec
+from py_openrpc_generator.generators.typescript import TypeScriptGenerator
+from py_openrpc_generator.generators.golang import GolangGenerator
 
 
 def main():
