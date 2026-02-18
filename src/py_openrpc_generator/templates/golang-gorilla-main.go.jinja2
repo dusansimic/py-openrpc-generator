@@ -1,0 +1,78 @@
+// {{ info.title }} — server wiring
+//
+// Generated once by py-openrpc-generator. This file will NOT be overwritten
+// on subsequent runs, so it is safe to edit.
+//
+// Workflow:
+//   1. Move each placeholder struct to its own file (e.g. user_service.go).
+//   2. Add your dependencies (DB connections, etc.) to the struct fields.
+//   3. Fill in the method bodies.
+//   4. The "var _ ...Handler" lines give you a compile-time interface check.
+
+package {{ package_name }}
+
+import (
+	"log"
+	"net/http"
+
+	"github.com/gorilla/rpc/v2"
+	"github.com/gorilla/rpc/v2/json2"
+)
+
+// ============================================================================
+// Service Implementations (placeholders — replace with your real structs)
+// ============================================================================
+
+{% for service in services %}
+// {{ service.name }} is a placeholder implementation of {{ service.name }}Handler.
+// Move this to its own file and wire in your dependencies.
+type {{ service.name }} struct{}
+
+// Compile-time check: {{ service.name }} must satisfy {{ service.name }}Handler.
+var _ {{ service.name }}Handler = (*{{ service.name }})(nil)
+
+{% for method in service.methods %}
+{% if method.deprecated %}
+// Deprecated: {{ method.summary or method.go_method_name }}. {{ method.description }}
+{% endif %}
+// {{ method.go_method_name }} handles "{{ method.name }}".
+{% if method.summary %}
+// {{ method.summary }}
+{% endif %}
+{% if method.description and method.description != method.summary %}
+//
+// {{ method.description }}
+{% endif %}
+{% if method.errors %}
+// Errors:
+{% for err in method.errors %}
+//   {{ err.code }}: {{ err.message }}
+{% endfor %}
+{% endif %}
+func (s *{{ service.name }}) {{ method.go_method_name }}(r *http.Request, args *{{ method.args_type }}, reply *{{ method.reply_type }}) error {
+	// TODO: implement {{ method.name }}
+	return nil
+}
+
+{% endfor %}
+{% endfor %}
+// ============================================================================
+// Server Setup
+// ============================================================================
+
+func main() {
+	server := rpc.NewServer()
+	server.RegisterCodec(json2.NewCodec(), "application/json")
+
+{% for service in services %}
+	if err := server.RegisterService(&{{ service.name }}{}, "{{ service.namespace if service.namespace != "default" else "" }}"); err != nil {
+		log.Fatalf("failed to register {{ service.name }}: %v", err)
+	}
+{% endfor %}
+
+	http.Handle("/rpc", server)
+
+	port := "{{ default_port }}"
+	log.Printf("JSON-RPC 2.0 server listening on :%s", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
+}

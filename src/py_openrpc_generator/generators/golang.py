@@ -22,8 +22,19 @@ class GolangGenerator:
         output_path: str,
         package_name: str = "main",
     ) -> None:
-        """Generate a Go server file from the OpenRPC spec."""
-        template = self.env.get_template("golang-gorilla-server.go.jinja2")
+        """Generate Go server files from the OpenRPC spec.
+
+        Two files are produced:
+
+        - <output_path>          — types, args/reply structs, and handler
+                                   interfaces.  Always regenerated; do not
+                                   hand-edit this file.
+        - <stem>_main<ext>       — placeholder service structs and main().
+                                   Written once; subsequent runs leave it
+                                   untouched so hand-written code is safe.
+        """
+        types_template = self.env.get_template("golang-gorilla-types.go.jinja2")
+        main_template = self.env.get_template("golang-gorilla-main.go.jinja2")
 
         converter = GolangConverter(spec.components)
 
@@ -48,15 +59,20 @@ class GolangGenerator:
             "default_port": default_port,
         }
 
-        output = template.render(**context)
+        # Always regenerate the types file.
+        types_file = Path(output_path)
+        types_file.parent.mkdir(parents=True, exist_ok=True)
+        types_file.write_text(types_template.render(**context), encoding="utf-8")
+        print(f"Generated Go types/interfaces: {types_file}")
 
-        output_file = Path(output_path)
-        output_file.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(output_file, "w", encoding="utf-8") as f:
-            f.write(output)
-
-        print(f"Generated Go Gorilla RPC server: {output_path}")
+        # Write the main/wiring file only on first run.
+        main_file = types_file.parent / f"{types_file.stem}_main{types_file.suffix}"
+        if not main_file.exists():
+            main_file.write_text(main_template.render(**context), encoding="utf-8")
+            print(f"Generated Go server wiring:   {main_file}")
+            print(f"  (this file will not be overwritten on future runs)")
+        else:
+            print(f"Skipped Go server wiring:     {main_file}  (already exists)")
 
     # -------------------------------------------------------------------------
     # Method processing
