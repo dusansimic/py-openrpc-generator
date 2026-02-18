@@ -39,8 +39,9 @@ def main():
         type=str,
         default=None,
         help=(
-            "Output file path. "
-            "Defaults to ./client.ts for typescript, ./server.go for go-gorilla."
+            "Output file path for the generated types/interfaces. "
+            "Defaults to ./client.ts for typescript, ./server.go for go-gorilla. "
+            "For go-gorilla a companion <stem>_impl.go is also written once."
         ),
     )
 

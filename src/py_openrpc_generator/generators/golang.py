@@ -29,7 +29,7 @@ class GolangGenerator:
         - <output_path>          — types, args/reply structs, and handler
                                    interfaces.  Always regenerated; do not
                                    hand-edit this file.
-        - <stem>_main<ext>       — placeholder service structs and main().
+        - <stem>_impl<ext>       — placeholder service structs (no main()).
                                    Written once; subsequent runs leave it
                                    untouched so hand-written code is safe.
         """
@@ -65,14 +65,14 @@ class GolangGenerator:
         types_file.write_text(types_template.render(**context), encoding="utf-8")
         print(f"Generated Go types/interfaces: {types_file}")
 
-        # Write the main/wiring file only on first run.
-        main_file = types_file.parent / f"{types_file.stem}_main{types_file.suffix}"
-        if not main_file.exists():
-            main_file.write_text(main_template.render(**context), encoding="utf-8")
-            print(f"Generated Go server wiring:   {main_file}")
+        # Write the implementation stubs file only on first run.
+        impl_file = types_file.parent / f"{types_file.stem}_impl{types_file.suffix}"
+        if not impl_file.exists():
+            impl_file.write_text(main_template.render(**context), encoding="utf-8")
+            print(f"Generated Go service stubs:   {impl_file}")
             print(f"  (this file will not be overwritten on future runs)")
         else:
-            print(f"Skipped Go server wiring:     {main_file}  (already exists)")
+            print(f"Skipped Go service stubs:     {impl_file}  (already exists)")
 
     # -------------------------------------------------------------------------
     # Method processing

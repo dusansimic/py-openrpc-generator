@@ -13,6 +13,9 @@ import (
 	"fmt"
 {% endif %}
 	"net/http"
+
+	"github.com/gorilla/rpc/v2"
+	"github.com/gorilla/rpc/v2/json2"
 )
 
 {% if type_definitions %}
@@ -118,3 +121,29 @@ type {{ service.name }}Handler interface {
 }
 
 {% endfor %}
+// ============================================================================
+// NewRPCServer — factory function (regenerated)
+//
+// Call this from your own main() to get a fully configured *rpc.Server.
+// Mount the returned server wherever you need it, e.g.:
+//
+//	http.Handle("/rpc", NewRPCServer(...))
+// ============================================================================
+
+// NewRPCServer creates a *rpc.Server with all services registered.
+// Pass one concrete handler per service interface.
+func NewRPCServer(
+{% for service in services %}
+	{{ service.namespace }}Handler {{ service.name }}Handler,
+{% endfor %}
+) *rpc.Server {
+	server := rpc.NewServer()
+	server.RegisterCodec(json2.NewCodec(), "application/json")
+
+{% for service in services %}
+	if err := server.RegisterService({{ service.namespace }}Handler, "{{ service.namespace if service.namespace != "default" else "" }}"); err != nil {
+		panic(err)
+	}
+{% endfor %}
+	return server
+}

@@ -1,4 +1,4 @@
-// {{ info.title }} — server wiring
+// {{ info.title }} — service implementations
 //
 // Generated once by py-openrpc-generator. This file will NOT be overwritten
 // on subsequent runs, so it is safe to edit.
@@ -11,19 +11,13 @@
 
 package {{ package_name }}
 
-import (
-	"log"
-	"net/http"
-
-	"github.com/gorilla/rpc/v2"
-	"github.com/gorilla/rpc/v2/json2"
-)
-
-// ============================================================================
-// Service Implementations (placeholders — replace with your real structs)
-// ============================================================================
+import "net/http"
 
 {% for service in services %}
+// ============================================================================
+// {{ service.name }}
+// ============================================================================
+
 // {{ service.name }} is a placeholder implementation of {{ service.name }}Handler.
 // Move this to its own file and wire in your dependencies.
 type {{ service.name }} struct{}
@@ -56,23 +50,3 @@ func (s *{{ service.name }}) {{ method.go_method_name }}(r *http.Request, args *
 
 {% endfor %}
 {% endfor %}
-// ============================================================================
-// Server Setup
-// ============================================================================
-
-func main() {
-	server := rpc.NewServer()
-	server.RegisterCodec(json2.NewCodec(), "application/json")
-
-{% for service in services %}
-	if err := server.RegisterService(&{{ service.name }}{}, "{{ service.namespace if service.namespace != "default" else "" }}"); err != nil {
-		log.Fatalf("failed to register {{ service.name }}: %v", err)
-	}
-{% endfor %}
-
-	http.Handle("/rpc", server)
-
-	port := "{{ default_port }}"
-	log.Printf("JSON-RPC 2.0 server listening on :%s", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
-}
